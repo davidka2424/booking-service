@@ -23,6 +23,7 @@ class ServiceType(enum.StrEnum):
     MAINTENANCE = "maintenance"
     INSPECTION = "inspection"
 
+
 class Booking(Base):
     __tablename__ = "bookings"
 
