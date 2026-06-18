@@ -1,5 +1,4 @@
-from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -28,15 +27,12 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Rate limiting middleware
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
     app.add_middleware(SlowAPIMiddleware)
 
-    # Routers
     app.include_router(api_router)
 
-    # Health check
     @app.get("/health", tags=["system"], summary="Health check")
     async def health() -> dict[str, str]:
         return {"status": "ok", "env": settings.app_env}

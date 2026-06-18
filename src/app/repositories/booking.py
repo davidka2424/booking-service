@@ -1,5 +1,4 @@
 import uuid
-from math import ceil
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,7 +21,6 @@ class BookingRepository(AbstractRepository[Booking]):
         booking = Booking(**kwargs)
         self._session.add(booking)
         await self._session.flush()
-        # Eagerly load all columns to avoid lazy-load issues outside session context
         await self._session.refresh(booking)
         return booking
 
@@ -61,7 +59,6 @@ class BookingRepository(AbstractRepository[Booking]):
         notification_sent: bool = False,
         failure_reason: str | None = None,
     ) -> Booking | None:
-        # For SQLite compatibility in tests, use select+update instead of RETURNING
         booking = await self.get_by_id(booking_id)
         if booking is None:
             return None

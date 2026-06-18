@@ -29,7 +29,11 @@ class Booking(Base):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     service_type: Mapped[ServiceType] = mapped_column(
-        Enum(ServiceType, name="service_type_enum", values_callable=lambda x: [e.value for e in x]),
+        Enum(
+            ServiceType,
+            name="service_type_enum",
+            values_callable=lambda x: [e.value for e in x],
+        ),
         nullable=False,
     )
     scheduled_at: Mapped[datetime] = mapped_column(
@@ -37,7 +41,11 @@ class Booking(Base):
         nullable=False,
     )
     status: Mapped[BookingStatus] = mapped_column(
-        Enum(BookingStatus, name="booking_status_enum", values_callable=lambda x: [e.value for e in x]),
+        Enum(
+            BookingStatus,
+            name="booking_status_enum",
+            values_callable=lambda x: [e.value for e in x],
+        ),
         nullable=False,
         default=BookingStatus.PENDING,
         index=True,
@@ -58,4 +66,8 @@ class Booking(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Booking id={self.id} status={self.status} service={self.service_type}>"
+        return (
+            f"<Booking id={self.id} "
+            f"status={self.status} "
+            f"service={self.service_type}>"
+        )

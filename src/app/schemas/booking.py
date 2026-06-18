@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -28,8 +28,7 @@ class BookingCreate(BaseModel):
     @field_validator("scheduled_at")
     @classmethod
     def scheduled_at_must_be_future(cls, v: datetime) -> datetime:
-        from datetime import timezone
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         if v.tzinfo is None:
             raise ValueError("scheduled_at must include timezone info")
         if v <= now:

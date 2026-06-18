@@ -1,9 +1,6 @@
 import random
 import uuid
 
-import structlog
-from taskiq import TaskiqDepends
-
 from app.core.config import get_settings
 from app.core.exceptions import ExternalServiceError
 from app.core.logging import get_logger
@@ -15,18 +12,10 @@ from app.workers.broker import broker
 logger = get_logger(__name__)
 
 
-async def get_repo_from_task() -> BookingRepository:
-    """Dependency: provides BookingRepository for task context."""
-    factory = get_session_factory()
-    async with factory() as session:
-        yield BookingRepository(session)  # type: ignore[misc]
-
-
 async def _mock_external_notification(booking_id: uuid.UUID, name: str) -> None:
     """Simulates sending a notification via external service."""
     log = logger.bind(booking_id=str(booking_id), customer=name)
     log.info("mock_notification.sending")
-    # Simulate external API call
     log.info(
         "mock_notification.sent",
         channel="email",
@@ -64,7 +53,6 @@ async def confirm_booking(booking_id: str) -> dict[str, str]:
             log.warning("task.booking_not_found")
             return {"status": "skipped", "reason": "booking_not_found"}
 
-        # Idempotency guard: only process pending bookings
         if booking.status != BookingStatus.PENDING:
             log.info(
                 "task.skipped_not_pending",
@@ -72,7 +60,6 @@ async def confirm_booking(booking_id: str) -> dict[str, str]:
             )
             return {"status": "skipped", "reason": f"already_{booking.status.value}"}
 
-        # Simulate external service failure (~15%)
         if random.random() < settings.task_failure_probability:
             log.warning("task.external_service_failure", attempt="simulated")
             await repo.update_status(
@@ -83,7 +70,6 @@ async def confirm_booking(booking_id: str) -> dict[str, str]:
             await session.commit()
             raise ExternalServiceError("Simulated external service failure")
 
-        # Success path
         await _mock_external_notification(bid, booking.name)
         await repo.update_status(
             booking_id=bid,

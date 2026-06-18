@@ -25,19 +25,16 @@ _settings = get_settings()
 limiter = Limiter(key_func=get_remote_address)
 
 
-# --- Dependency injection ---
-
 def get_booking_service(
     session: Annotated[object, Depends(get_db_session)],
 ) -> BookingService:
-    from sqlalchemy.ext.asyncio import AsyncSession
+    from sqlalchemy.ext.asyncio import AsyncSession  # noqa: F401
+
     return BookingService(BookingRepository(session))  # type: ignore[arg-type]
 
 
 ServiceDep = Annotated[BookingService, Depends(get_booking_service)]
 
-
-# --- Endpoints ---
 
 @router.post(
     "",
@@ -102,7 +99,9 @@ async def list_bookings(
     "/{booking_id}",
     response_model=BookingResponse,
     summary="Cancel a booking",
-    description="Cancels a booking. Only bookings in 'pending' status can be cancelled.",
+    description=(
+        "Cancels a booking. Only bookings in 'pending' status can be cancelled."
+    ),
 )
 async def cancel_booking(
     booking_id: uuid.UUID,

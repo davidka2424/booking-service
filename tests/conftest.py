@@ -1,6 +1,6 @@
 import uuid
 from collections.abc import AsyncGenerator
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -12,8 +12,6 @@ from sqlalchemy.pool import StaticPool
 from app.db.base import Base
 from app.db.models.booking import Booking, BookingStatus, ServiceType
 
-
-# ── Database setup ─────────────────────────────────────────────────────────────
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -44,13 +42,10 @@ async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
         await session.rollback()
 
 
-# ── App & client setup ─────────────────────────────────────────────────────────
-
 @pytest.fixture
 def mock_broker():
-    """Mock TaskIQ broker — tasks are not sent to Redis.
-    Each call returns a fresh task_id to avoid UNIQUE constraint violations.
-    """
+    """Mock TaskIQ broker — tasks are not sent to Redis."""
+
     async def _kiq_side_effect(*args, **kwargs):
         mock_task = MagicMock()
         mock_task.task_id = str(uuid.uuid4())
@@ -62,26 +57,22 @@ def mock_broker():
 
 
 @pytest_asyncio.fixture
-async def client(db_session: AsyncSession, mock_broker) -> AsyncGenerator[AsyncClient, None]:
+async def client(
+    db_session: AsyncSession,
+    mock_broker,
+) -> AsyncGenerator[AsyncClient, None]:
     """
-    Test HTTP client with:
-    - In-memory SQLite instead of PostgreSQL
-    - Mocked TaskIQ broker (no real Redis)
-    - Rate limiter disabled
-    - Mocked lifespan
+    Test HTTP client with in-memory SQLite and mocked TaskIQ broker.
     """
     from app.db.session import get_db_session
     from app.main import create_app
 
     app = create_app()
 
-    # Override DB session
     async def override_get_db():
         yield db_session
 
     app.dependency_overrides[get_db_session] = override_get_db
-
-    # Disable rate limiting for tests
     app.state.limiter.enabled = False
 
     with patch("app.core.lifespan.create_db_engine", AsyncMock()), \
@@ -95,22 +86,20 @@ async def client(db_session: AsyncSession, mock_broker) -> AsyncGenerator[AsyncC
             yield ac
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────────
-
 def future_datetime(hours: int = 24) -> str:
-    dt = datetime.now(tz=timezone.utc) + timedelta(hours=hours)
+    dt = datetime.now(tz=UTC) + timedelta(hours=hours)
     return dt.isoformat()
 
 
 @pytest_asyncio.fixture
 async def pending_booking(db_session: AsyncSession) -> Booking:
-    """Creates a PENDING booking directly in DB."""
     from app.repositories.booking import BookingRepository
+
     repo = BookingRepository(db_session)
     booking = await repo.create(
         name="Test User",
         service_type=ServiceType.CONSULTATION,
-        scheduled_at=datetime.now(tz=timezone.utc) + timedelta(days=1),
+        scheduled_at=datetime.now(tz=UTC) + timedelta(days=1),
         status=BookingStatus.PENDING,
     )
     await db_session.commit()
@@ -119,13 +108,13 @@ async def pending_booking(db_session: AsyncSession) -> Booking:
 
 @pytest_asyncio.fixture
 async def confirmed_booking(db_session: AsyncSession) -> Booking:
-    """Creates a CONFIRMED booking directly in DB."""
     from app.repositories.booking import BookingRepository
+
     repo = BookingRepository(db_session)
     booking = await repo.create(
         name="Confirmed User",
         service_type=ServiceType.REPAIR,
-        scheduled_at=datetime.now(tz=timezone.utc) + timedelta(days=2),
+        scheduled_at=datetime.now(tz=UTC) + timedelta(days=2),
         status=BookingStatus.CONFIRMED,
     )
     await db_session.commit()

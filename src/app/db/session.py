@@ -41,7 +41,9 @@ async def dispose_db_engine() -> None:
 
 def get_session_factory() -> async_sessionmaker[AsyncSession]:
     if _session_factory is None:
-        raise RuntimeError("Database engine not initialized. Call create_db_engine() first.")
+        raise RuntimeError(
+            "Database engine not initialized. Call create_db_engine() first."
+        )
     return _session_factory
 
 

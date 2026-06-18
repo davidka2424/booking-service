@@ -5,7 +5,12 @@ from app.core.exceptions import BookingCancellationError, BookingNotFoundError
 from app.core.logging import get_logger
 from app.db.models.booking import BookingStatus
 from app.repositories.booking import BookingRepository
-from app.schemas.booking import BookingCreate, BookingFilters, BookingListResponse, BookingResponse
+from app.schemas.booking import (
+    BookingCreate,
+    BookingFilters,
+    BookingListResponse,
+    BookingResponse,
+)
 from app.workers.tasks.booking import confirm_booking
 
 logger = get_logger(__name__)
@@ -26,13 +31,9 @@ class BookingService:
             status=BookingStatus.PENDING,
         )
 
-        # Enqueue background task
         task = await confirm_booking.kiq(str(booking.id))
-
-        # Store task_id for idempotency tracking
         await self._repo.set_task_id(booking.id, uuid.UUID(task.task_id))
 
-        # Re-fetch to get fresh state including server-generated timestamps
         refreshed = await self._repo.get_by_id(booking.id)
         assert refreshed is not None
 

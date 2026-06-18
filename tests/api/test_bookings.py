@@ -1,16 +1,13 @@
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
-import pytest
 from httpx import AsyncClient
 
-from app.db.models.booking import Booking, BookingStatus
+from app.db.models.booking import Booking
 from tests.conftest import future_datetime
 
 
 class TestCreateBooking:
-    """POST /api/v1/bookings"""
-
     async def test_create_booking_success(self, client: AsyncClient) -> None:
         response = await client.post(
             "/api/v1/bookings",
@@ -29,8 +26,16 @@ class TestCreateBooking:
         assert "id" in data
         assert "created_at" in data
 
-    async def test_create_booking_all_service_types(self, client: AsyncClient) -> None:
-        service_types = ["consultation", "repair", "installation", "maintenance", "inspection"]
+    async def test_create_booking_all_service_types(
+        self, client: AsyncClient
+    ) -> None:
+        service_types = [
+            "consultation",
+            "repair",
+            "installation",
+            "maintenance",
+            "inspection",
+        ]
         for stype in service_types:
             response = await client.post(
                 "/api/v1/bookings",
@@ -54,7 +59,7 @@ class TestCreateBooking:
         assert response.status_code == 422
 
     async def test_create_booking_past_datetime(self, client: AsyncClient) -> None:
-        past = (datetime.now(tz=timezone.utc) - timedelta(hours=1)).isoformat()
+        past = (datetime.now(tz=UTC) - timedelta(hours=1)).isoformat()
         response = await client.post(
             "/api/v1/bookings",
             json={
@@ -65,7 +70,9 @@ class TestCreateBooking:
         )
         assert response.status_code == 422
 
-    async def test_create_booking_invalid_service_type(self, client: AsyncClient) -> None:
+    async def test_create_booking_invalid_service_type(
+        self, client: AsyncClient
+    ) -> None:
         response = await client.post(
             "/api/v1/bookings",
             json={
@@ -77,16 +84,17 @@ class TestCreateBooking:
         assert response.status_code == 422
 
     async def test_create_booking_missing_fields(self, client: AsyncClient) -> None:
-        response = await client.post("/api/v1/bookings", json={"name": "Ivan Petrov"})
+        response = await client.post(
+            "/api/v1/bookings", json={"name": "Ivan Petrov"}
+        )
         assert response.status_code == 422
 
     async def test_create_booking_no_timezone(self, client: AsyncClient) -> None:
-        """Datetime without timezone info should fail validation."""
         response = await client.post(
             "/api/v1/bookings",
             json={
                 "name": "Ivan Petrov",
-                "scheduled_at": "2099-01-01T10:00:00",  # no tz
+                "scheduled_at": "2099-01-01T10:00:00",
                 "service_type": "consultation",
             },
         )
@@ -94,8 +102,6 @@ class TestCreateBooking:
 
 
 class TestGetBooking:
-    """GET /api/v1/bookings/{id}"""
-
     async def test_get_booking_success(
         self, client: AsyncClient, pending_booking: Booking
     ) -> None:
@@ -117,8 +123,6 @@ class TestGetBooking:
 
 
 class TestListBookings:
-    """GET /api/v1/bookings"""
-
     async def test_list_bookings_empty(self, client: AsyncClient) -> None:
         response = await client.get("/api/v1/bookings")
         assert response.status_code == 200
@@ -140,8 +144,8 @@ class TestListBookings:
     async def test_list_bookings_filter_by_status(
         self,
         client: AsyncClient,
-        pending_booking: Booking,
-        confirmed_booking: Booking,
+        pending_booking: Booking,  # noqa: ARG002
+        confirmed_booking: Booking,  # noqa: ARG002
     ) -> None:
         response = await client.get("/api/v1/bookings?status=pending")
         assert response.status_code == 200
@@ -174,8 +178,6 @@ class TestListBookings:
 
 
 class TestCancelBooking:
-    """DELETE /api/v1/bookings/{id}"""
-
     async def test_cancel_pending_booking_success(
         self, client: AsyncClient, pending_booking: Booking
     ) -> None:
@@ -195,11 +197,9 @@ class TestCancelBooking:
     async def test_cancel_already_cancelled_booking(
         self, client: AsyncClient, pending_booking: Booking
     ) -> None:
-        # Cancel once
         resp1 = await client.delete(f"/api/v1/bookings/{pending_booking.id}")
         assert resp1.status_code == 200
 
-        # Cancel again — should 409
         resp2 = await client.delete(f"/api/v1/bookings/{pending_booking.id}")
         assert resp2.status_code == 409
 
