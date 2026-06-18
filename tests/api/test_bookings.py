@@ -26,9 +26,7 @@ class TestCreateBooking:
         assert "id" in data
         assert "created_at" in data
 
-    async def test_create_booking_all_service_types(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_create_booking_all_service_types(self, client: AsyncClient) -> None:
         service_types = [
             "consultation",
             "repair",
@@ -84,9 +82,7 @@ class TestCreateBooking:
         assert response.status_code == 422
 
     async def test_create_booking_missing_fields(self, client: AsyncClient) -> None:
-        response = await client.post(
-            "/api/v1/bookings", json={"name": "Ivan Petrov"}
-        )
+        response = await client.post("/api/v1/bookings", json={"name": "Ivan Petrov"})
         assert response.status_code == 422
 
     async def test_create_booking_no_timezone(self, client: AsyncClient) -> None:

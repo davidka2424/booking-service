@@ -12,9 +12,7 @@ class BookingRepository(AbstractRepository[Booking]):
         super().__init__(session)
 
     async def get_by_id(self, id: uuid.UUID) -> Booking | None:
-        result = await self._session.execute(
-            select(Booking).where(Booking.id == id)
-        )
+        result = await self._session.execute(select(Booking).where(Booking.id == id))
         return result.scalar_one_or_none()
 
     async def create(self, **kwargs: object) -> Booking:
@@ -69,13 +67,7 @@ class BookingRepository(AbstractRepository[Booking]):
         await self._session.refresh(booking)
         return booking
 
-    async def set_task_id(
-        self, booking_id: uuid.UUID, task_id: uuid.UUID
-    ) -> None:
-        stmt = (
-            update(Booking)
-            .where(Booking.id == booking_id)
-            .values(task_id=task_id)
-        )
+    async def set_task_id(self, booking_id: uuid.UUID, task_id: uuid.UUID) -> None:
+        stmt = update(Booking).where(Booking.id == booking_id).values(task_id=task_id)
         await self._session.execute(stmt)
         await self._session.flush()

@@ -16,7 +16,6 @@ from sqlalchemy.pool import StaticPool
 from app.db.base import Base
 from app.db.models.booking import Booking, BookingStatus, ServiceType
 
-
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 
@@ -79,10 +78,12 @@ async def client(
     app.dependency_overrides[get_db_session] = override_get_db
     app.state.limiter.enabled = False
 
-    with patch("app.core.lifespan.create_db_engine", AsyncMock()), \
-         patch("app.core.lifespan.dispose_db_engine", AsyncMock()), \
-         patch("app.workers.broker.broker.startup", AsyncMock()), \
-         patch("app.workers.broker.broker.shutdown", AsyncMock()):
+    with (
+        patch("app.core.lifespan.create_db_engine", AsyncMock()),
+        patch("app.core.lifespan.dispose_db_engine", AsyncMock()),
+        patch("app.workers.broker.broker.startup", AsyncMock()),
+        patch("app.workers.broker.broker.shutdown", AsyncMock()),
+    ):
         async with AsyncClient(
             transport=ASGITransport(app=app),
             base_url="http://test",

@@ -9,20 +9,19 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
 
-class BookingStatus(str, enum.Enum):
+class BookingStatus(enum.StrEnum):
     PENDING = "pending"
     CONFIRMED = "confirmed"
     FAILED = "failed"
     CANCELLED = "cancelled"
 
 
-class ServiceType(str, enum.Enum):
+class ServiceType(enum.StrEnum):
     CONSULTATION = "consultation"
     REPAIR = "repair"
     INSTALLATION = "installation"
     MAINTENANCE = "maintenance"
     INSPECTION = "inspection"
-
 
 class Booking(Base):
     __tablename__ = "bookings"
@@ -67,8 +66,5 @@ class Booking(Base):
 
     def __repr__(self) -> str:
         return (
-            f"<Booking id={self.id} "
-            f"status={self.status} "
-            f"service={self.service_type}>"
+            f"<Booking id={self.id} status={self.status} service={self.service_type}>"
         )
-    

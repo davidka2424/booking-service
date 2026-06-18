@@ -1,15 +1,14 @@
 import uuid
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.base import Base
 
-ModelT = TypeVar("ModelT", bound=Base)
+type ModelT = Base  # type: ignore[valid-type]
 
 
-class AbstractRepository(ABC, Generic[ModelT]):
+class AbstractRepository[ModelT](ABC):
     """Abstract base repository defining the data access contract."""
 
     def __init__(self, session: AsyncSession) -> None:

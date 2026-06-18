@@ -190,4 +190,3 @@ class TestConfirmBookingTask:
             await _call_task(str(booking.id))
 
         mock_notify.assert_awaited_once_with(booking.id, booking.name)
-        
