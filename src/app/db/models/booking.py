@@ -71,3 +71,4 @@ class Booking(Base):
             f"status={self.status} "
             f"service={self.service_type}>"
         )
+    

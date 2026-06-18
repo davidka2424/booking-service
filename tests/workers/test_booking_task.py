@@ -76,9 +76,9 @@ class TestConfirmBookingTask:
                 return_value=mock_repo,
             ),
             patch("app.workers.tasks.booking.random.random", return_value=0.01),
+            pytest.raises(ExternalServiceError),
         ):
-            with pytest.raises(ExternalServiceError):
-                await _call_task(str(booking.id))
+            await _call_task(str(booking.id))
 
         mock_repo.update_status.assert_awaited_once()
         call_kwargs = mock_repo.update_status.call_args.kwargs
@@ -190,3 +190,4 @@ class TestConfirmBookingTask:
             await _call_task(str(booking.id))
 
         mock_notify.assert_awaited_once_with(booking.id, booking.name)
+        
