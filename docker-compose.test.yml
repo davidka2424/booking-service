@@ -1,0 +1,44 @@
+services:
+  test:
+    build:
+      context: .
+      target: test
+    environment:
+      APP_ENV: testing
+      POSTGRES_HOST: postgres-test
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: booking_test_db
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD: booking_pass
+      REDIS_HOST: redis-test
+      REDIS_PORT: 6379
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    command: pytest --tb=short -v --cov=src --cov-report=term-missing
+
+  postgres-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: booking_test_db
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD: booking_pass
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U booking_user -d booking_test_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  redis-test:
+    image: redis:7-alpine
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
