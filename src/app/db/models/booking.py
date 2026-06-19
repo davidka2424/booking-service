@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base  # type: ignore[misc]
 
+
 class BookingStatus(enum.StrEnum):
     PENDING = "pending"
     CONFIRMED = "confirmed"

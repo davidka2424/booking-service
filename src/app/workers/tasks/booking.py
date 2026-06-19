@@ -23,7 +23,7 @@ async def _mock_external_notification(booking_id: uuid.UUID, name: str) -> None:
     )
 
 
-@broker.task( #type: ignore[misk]
+@broker.task(  # type: ignore[misk]
     task_name="confirm_booking",
     retry_on_error=True,
     max_retries=3,
