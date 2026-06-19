@@ -5,10 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.base import Base
 
-type ModelT = Base  # type: ignore[valid-type]
 
-
-class AbstractRepository[ModelT](ABC):
+class AbstractRepository[ModelT: Base](ABC):
     """Abstract base repository defining the data access contract."""
 
     def __init__(self, session: AsyncSession) -> None:

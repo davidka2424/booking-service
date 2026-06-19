@@ -28,8 +28,6 @@ limiter = Limiter(key_func=get_remote_address)
 def get_booking_service(
     session: Annotated[object, Depends(get_db_session)],
 ) -> BookingService:
-    from sqlalchemy.ext.asyncio import AsyncSession  # noqa: F401
-
     return BookingService(BookingRepository(session))  # type: ignore[arg-type]
 
 
