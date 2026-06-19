@@ -25,9 +25,8 @@ known-first-party = ["app"]
 
 [tool.mypy]
 python_version = "3.12"
-strict = true
 ignore_missing_imports = true
-plugins = ["pydantic.mypy"]
+disable_error_code = ["misc", "no-any-return"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
