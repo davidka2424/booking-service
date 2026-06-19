@@ -63,6 +63,7 @@ jobs:
 
     env:
       APP_ENV: testing
+      PYTHONPATH: src
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
       POSTGRES_DB: booking_test_db
